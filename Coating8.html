@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <title>Paint System Calculator – Zulu / Storebro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.4;
+    }
+    body {
+      margin: 0;
+      background: #0b1020;
+      color: #f5f5f5;
+    }
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 16px 40px;
+    }
+    h1 {
+      font-size: 1.7rem;
+      margin-bottom: 0.2rem;
+    }
+    .subtitle {
+      opacity: 0.8;
+      margin-bottom: 1.5rem;
+    }
+    .card {
+      background: #141a33;
+      border-radius: 14px;
+      padding: 18px 16px;
+      margin-bottom: 16px;
+      border: 1px solid #262f55;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.35);
+    }
+    .card h2 {
+      margin-top: 0;
+      font-size: 1.2rem;
+    }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 18px;
+      margin-bottom: 10px;
+    }
+    .field {
+      flex: 1 1 180px;
+      min-width: 180px;
+    }
+    label {
+      display: block;
+      font-size: 0.8rem;
+      opacity: 0.8;
+      margin-bottom: 4px;
+    }
+    select, input[type="number"], input[type="text"] {
+      width: 100%;
+      padding: 7px 8px;
+      border-radius: 8px;
+      border: 1px solid #3a4470;
+      background: #10162b;
+      color: #f5f5f5;
+      font-size: 0.9rem;
+    }
+    select:focus, input[type="number"]:focus, input[type="text"]:focus {
+      outline: 2px solid #4fa3ff;
+      outline-offset: 1px;
+    }
+    .lang-toggle {
+      display: inline-flex;
+      border-radius: 999px;
+      border: 1px solid #3a4470;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .lang-toggle button {
+      border: none;
+      background: transparent;
+      padding: 5px 11px;
+      font-size: 0.8rem;
+      color: #c8cee8;
+      cursor: pointer;
+    }
+    .lang-toggle button.active {
+      background: #4fa3ff;
+      color: #050814;
+    }
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 6px 0 4px;
+    }
+    .pill-row button {
+      border-radius: 999px;
+      border: 1px solid #3a4470;
+      padding: 5px 10px;
+      background: #10162b;
+      color: #d8ddf8;
+      font-size: 0.78rem;
+      cursor: pointer;
+    }
+    .pill-row button.active {
+      background: #4fa3ff;
+      color: #050814;
+      border-color: #4fa3ff;
+    }
+    .small-note {
+      font-size: 0.75rem;
+      opacity: 0.7;
+    }
+    .btn-primary {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 18px;
+      background: #00c9a7;
+      color: #02050d;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      margin-top: 6px;
+    }
+    .btn-primary:hover {
+      background: #00b396;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      margin-top: 8px;
+    }
+    th, td {
+      border-bottom: 1px solid #262f55;
+      padding: 6px 5px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      font-weight: 600;
+      background: #151b37;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    .table-wrapper {
+      max-height: 320px;
+      overflow: auto;
+      border-radius: 8px;
+      border: 1px solid #262f55;
+      margin-top: 10px;
+    }
+    .summary {
+      margin-top: 12px;
+      font-size: 0.85rem;
+    }
+    .summary strong {
+      font-weight: 600;
+    }
+    .tag {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      background: #26335b;
+      color: #e1e6ff;
+      margin-right: 4px;
+      margin-bottom: 2px;
+    }
+    .checkbox-field {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      margin-top: 4px;
+    }
+    .trace-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      margin-top: 10px;
+      background: #10162b;
+    }
+    .trace-table th, .trace-table td {
+      border: 1px solid #262f55;
+      padding: 4px 5px;
+      text-align: left;
+    }
+    .trace-table th {
+      background: #151b37;
+      font-weight: 600;
+    }
+    .no-print {}
+    @media print {
+      body {
+        background: #fff;
+        color: #000;
+      }
+      .card {
+        box-shadow: none;
+        border-color: #aaa;
+      }
+      .no-print {
+        display: none !important;
+      }
+      @page {
+        size: A4 portrait;
+        margin: 10mm;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="lang-toggle">
+      <button id="btn-sv" class="active" type="button">Svenska</button>
+      <button id="btn-en" type="button">English</button>
+    </div>
+
+    <header style="margin-bottom:16px;">
+      <h1 data-i18n="title">Målningssystem – beräkning</h1>
+      <div class="subtitle" data-i18n="subtitle">
+        Välj användningsprofil, område och metod. Verktyget föreslår system, skikt, liter per produkt
+        och ungefärlig förtunning enligt datablad.
+      </div>
+    </header>
+
+    <section class="card">
+      <h2 data-i18n="section_setup">1. Förutsättningar</h2>
+
+      <div class="row">
+        <div class="field">
+          <label data-i18n="usage_profile_label">Användningsprofil</label>
+          <div class="pill-row" id="usage-profile">
+            <button type="button" data-value="premium" class="active" data-i18n="usage_premium">
+              Premium leisure (Awlgrip)
+            </button>
+            <button type="button" data-value="commercial" data-i18n="usage_commercial">
+              Kommersiellt bruk (Interthane)
+            </button>
+          </div>
+          <div class="small-note" data-i18n="usage_note">
+            Premium = Awlgrip över vattenlinjen. Kommersiellt = Interthane 990 som standardfinish.
+          </div>
+        </div>
+
+        <div class="field">
+          <label data-i18n="area_position_label">Area</label>
+          <div class="pill-row" id="area-position">
+            <button type="button" data-value="above" class="active" data-i18n="area_above">
+              Ovanför vattenlinjen
+            </button>
+            <button type="button" data-value="below" data-i18n="area_below">
+              Under vattenlinjen
+            </button>
+          </div>
+        </div>
+
+        <div class="field" id="immersion-field">
+          <label data-i18n="immersion_label">Nedsänkningsrisk</label>
+          <select id="immersion">
+            <option value="non" selected data-i18n="immersion_non">
+              Ej nedsänkt (normalt fribord)
+            </option>
+            <option value="near" data-i18n="immersion_near">
+              Nära vattenlinjen / risk att ligga under
+            </option>
+            <option value="immersed" data-i18n="immersion_immersed">
+              Konstant nedsänkt
+            </option>
+          </select>
+          <div class="small-note" data-i18n="immersion_note">
+            Vid risk att ytan hamnar under vatten väljs Interfine 878 som finish (tål nedsänkning).
+          </div>
+        </div>
+
+        <div class="field" id="fouling-field" style="display:none;">
+          <label data-i18n="fouling_label">Beväxningsskydd under vattenlinjen</label>
+          <select id="fouling">
+            <option value="no" selected data-i18n="fouling_no">
+              Ingen bottenfärg (Interfine 878 som slutskikt)
+            </option>
+            <option value="yes" data-i18n="fouling_yes">
+              Bottenfärg (Trilux / Trilux Hard)
+            </option>
+          </select>
+          <div class="small-note" data-i18n="fouling_note">
+            Ingen bottenfärg = Intershield 300 + Interfine 878 helt under vattenlinjen.
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label data-i18n="method_label">Appliceringsmetod</label>
+          <div class="pill-row" id="method">
+            <button type="button" data-value="spray" class="active" data-i18n="method_spray">Spruta</button>
+            <button type="button" data-value="roller" data-i18n="method_roller">Rulle/pensel</button>
+          </div>
+          <div class="small-note" data-i18n="method_note">
+            Vid sprutning räknas extra spill + förtunning (typiskt 5–15 % beroende på produkt och utrustning).
+          </div>
+        </div>
+
+        <div class="field">
+          <label data-i18n="area_label">Målad area (m²)</label>
+          <input type="number" id="area" min="1" step="0.1" value="40" />
+          <div class="small-note" data-i18n="area_note">
+            Ange total målningsbar yta för den aktuella zonen.
+          </div>
+        </div>
+
+        <div class="field" id="interthane-variant-field" style="display:none;">
+          <label data-i18n="interthane_variant_label">Interthane-variant</label>
+          <select id="interthane-variant">
+            <option value="990e" selected data-i18n="interthane_990e">
+              Interthane 990E (standard)
+            </option>
+            <option value="990hs" data-i18n="interthane_990hs">
+              Interthane 990HS (High Solid)
+            </option>
+            <option value="990sg" data-i18n="interthane_990sg">
+              Interthane 990SG (semimatt)
+            </option>
+          </select>
+          <div class="small-note" data-i18n="interthane_variant_note">
+            Gäller endast över vattenlinjen vid kommersiellt bruk (ej nedsänkt fribord).
+          </div>
+        </div>
+
+        <div class="field" id="clearcoat-field">
+          <label data-i18n="clear_label">Klarlack (endast premium över vattenlinjen)</label>
+          <div class="checkbox-field">
+            <input type="checkbox" id="add-clear" />
+            <span data-i18n="clear_note">
+              Lägg till Awlgrip HDT Clear ovanpå kulörsystemet vid behov (glans/slittålighet).
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-primary" id="btn-calc" type="button" data-i18n="btn_calc">
+        Beräkna system & åtgång
+      </button>
+    </section>
+
+    <section class="card">
+      <h2 data-i18n="section_result">2. System, skikt & liter per produkt</h2>
+
+      <button
+        class="btn-primary no-print"
+        type="button"
+        onclick="window.print()"
+        style="margin-bottom:8px;"
+      >
+        Spara som PDF
+      </button>
+
+      <div class="small-note" data-i18n="result_note">
+        Värdena bygger på databladens rekommenderade DFT och justerad sträckförmåga (inkl. spill).
+        Kontrollera alltid mot verkligt objekt.
+      </div>
+
+      <div id="chosen-system" style="margin-top:8px;font-size:0.85rem;"></div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th data-i18n="col_product">Produkt</th>
+              <th data-i18n="col_role">Funktion</th>
+              <th data-i18n="col_coats">Skikt</th>
+              <th data-i18n="col_dft">DFT/skikt (µm)</th>
+              <th data-i18n="col_cov">Sträckning (m²/L)</th>
+              <th data-i18n="col_liters">Liters färg</th>
+              <th data-i18n="col_thinner">Förtunning</th>
+            </tr>
+          </thead>
+          <tbody id="result-body"></tbody>
+        </table>
+      </div>
+
+      <div class="summary" id="summary-per-product"></div>
+    </section>
+
+    <section class="card">
+      <h2 data-i18n="trace_title">3. Spårbarhet – målningslogg</h2>
+      <div class="small-note" data-i18n="trace_note">
+        Används efter utförd målning. Fyll i per båt/område för att dokumentera batch, faktisk åtgång,
+        datum och utförare. Kan skrivas ut och sparas i projektmapp.
+      </div>
+
+      <button
+        class="btn-primary no-print"
+        type="button"
+        onclick="window.print()"
+        style="margin:8px 0;"
+      >
+        Skriv ut / PDF
+      </button>
+
+      <table class="trace-table">
+        <thead>
+          <tr>
+            <th data-i18n="trace_boat">Båt / projekt</th>
+            <th data-i18n="trace_area">Område</th>
+            <th data-i18n="trace_date">Datum</th>
+            <th data-i18n="trace_product">Produkt + kulör/kod</th>
+            <th data-i18n="trace_batch">Batch / Lot-nr</th>
+            <th data-i18n="trace_planned">Plan. liter</th>
+            <th data-i18n="trace_actual">Faktisk liter</th>
+            <th data-i18n="trace_applicator">Applicerare / sign</th>
+            <th data-i18n="trace_notes">Kommentarer</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><input type="text" style="width:100%;"></td>
+            <td><input type="text" style="width:100%;"></td>
+            <td><input type="text" style="width:100%;"></td>
+            <td><input type="text" style="width:100%;"></td>
+            <td><input type="text" style="width:100%;"></td>
+            <td><input type="text" style="width:100%;"></td>
+            <td><input type="text" style="width:100%;"></td>
+            <td><input type="text" style="width:100%;"></td>
+            <td><textarea style="width:100%;height:38px;"></textarea></td>
+          </tr>
+          <tr>
+            <td><input type="text" style="width:100%;"></td>
+            <td><input type="text" style="width:100%;"></td>
+            <td><input type="text" style="width:100%;"></td>
+            <td><input type="text" style="width:100%;"></td>
+            <td><input type="text" style="width:100%;"></td>
+            <td><input type="text" style="width:100%;"></td>
+            <td><input type="text" style="width:100%;"></td>
+            <td><input type="text" style="width:100%;"></td>
+            <td><textarea style="width:100%;height:38px;"></textarea></td>
+          </tr>
+          <tr>
+            <td><input type="text" style="width:100%;"></td>
+            <td><input type="text" style="width:100%;"></td>
+            <td><input type="text" style="width:100%;"></td>
+            <td><input type="text" style="width:100%;"></td>
+            <td><input type="text" style="width:100%;"></td>
+            <td><input type="text" style="width:100%;"></td>
+            <td><input type="text" style="width:100%;"></td>
+            <td><input type="text" style="width:100%;"></td>
+            <td><textarea style="width:100%;height:38px;"></textarea></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <script>
+    const products = {
+      intershield300: {
+        key: "intershield300",
+        name: { sv: "Intershield 300", en: "Intershield 300" },
+        role: { sv: "Epoxiprimer / barriär", en: "Epoxy primer / barrier" },
+        volumeSolids: 0.60,
+        dft: { spray: 125, roller: 125 },
+        coverage: { spray: 4.0, roller: 3.5 },
+        coats: { spray: 2, roller: 2 },
+        thinner: {
+          spray: "Se TDS (t.ex. GTA123)",
+          roller: "Se TDS – låg förtunning"
+        },
+        thinnerRatio: { spray: 0.10, roller: 0.05 }
+      },
+      interprime450: {
+        key: "interprime450",
+        name: { sv: "Interprime 450", en: "Interprime 450" },
+        role: { sv: "Epoxiprimer (yacht)", en: "Epoxy primer (yacht)" },
+        volumeSolids: 0.60,
+        dft: { spray: 75, roller: 75 },
+        coverage: { spray: 6.0, roller: 6.0 },
+        // 1 skikt per rad, vi lägger två rader (Alu/Brons) i chooseSystem
+        coats: { spray: 1, roller: 1 },
+        thinner: {
+          spray: "Se TDS (International yacht thinner)",
+          roller: "Se TDS – låg förtunning"
+        },
+        thinnerRatio: { spray: 0.10, roller: 0.05 }
+      },
+      intergard263: {
+        key: "intergard263",
+        name: { sv: "Intergard 263", en: "Intergard 263" },
+        role: { sv: "Vidhäftningsprimer / tie coat", en: "Tie coat" },
+        volumeSolids: 0.57,
+        dft: { spray: 100, roller: 100 },
+        coverage: { spray: 4.5, roller: 4.5 },
+        coats: { spray: 1, roller: 1 },
+        thinner: {
+          spray: "GTA220 (spray)",
+          roller: "GTA220 vid behov"
+        },
+        thinnerRatio: { spray: 0.10, roller: 0.05 }
+      },
+      interfine878: {
+        key: "interfine878",
+        name: { sv: "Interfine 878", en: "Interfine 878" },
+        role: { sv: "Finish (tål nedsänkning)", en: "Finish (immersible)" },
+        volumeSolids: 0.72,
+        dft: { spray: 75, roller: 75 },
+        coverage: { spray: 8.0, roller: 8.0 },
+        coats: { spray: 2, roller: 2 },
+        thinner: {
+          spray: "GTA007 (spray)",
+          roller: "GTA007 vid behov"
+        },
+        thinnerRatio: { spray: 0.10, roller: 0.05 }
+      },
+      interthane990e: {
+        key: "interthane990e",
+        name: { sv: "Interthane 990E", en: "Interthane 990E" },
+        role: { sv: "Polyuretanfinish", en: "Polyurethane finish" },
+        volumeSolids: 0.70,
+        dft: { spray: 50, roller: 50 },
+        coverage: { spray: 9.0, roller: 8.0 },
+        coats: { spray: 2, roller: 2 },
+        thinner: {
+          spray: "GTA056 / GTA713 / GTA733",
+          roller: "GTA056 / GTA713 / GTA733 vid behov"
+        },
+        thinnerRatio: { spray: 0.10, roller: 0.05 }
+      },
+      interthane990hs: {
+        key: "interthane990hs",
+        name: { sv: "Interthane 990HS", en: "Interthane 990HS" },
+        role: {
+          sv: "Polyuretanfinish (High Solid)",
+          en: "Polyurethane finish (High Solid)"
+        },
+        volumeSolids: 0.75,
+        dft: { spray: 50, roller: 50 },
+        coverage: { spray: 8.0, roller: 7.0 },
+        coats: { spray: 2, roller: 2 },
+        thinner: {
+          spray: "GTA056 / GTA713 / GTA733",
+          roller: "GTA056 / GTA713 / GTA733 vid behov"
+        },
+        thinnerRatio: { spray: 0.10, roller: 0.05 }
+      },
+      interthane990sg: {
+        key: "interthane990sg",
+        name: { sv: "Interthane 990SG", en: "Interthane 990SG" },
+        role: {
+          sv: "Polyuretanfinish (semimatt)",
+          en: "Polyurethane finish (semi-gloss)"
+        },
+        volumeSolids: 0.65,
+        dft: { spray: 50, roller: 50 },
+        coverage: { spray: 9.0, roller: 8.0 },
+        coats: { spray: 2, roller: 2 },
+        thinner: {
+          spray: "GTA056 / GTA713 / GTA733",
+          roller: "GTA056 / GTA713 / GTA733 vid behov"
+        },
+        thinnerRatio: { spray: 0.10, roller: 0.05 }
+      },
+      triluxHard: {
+        key: "triluxHard",
+        name: { sv: "Trilux Hard Antifouling", en: "Trilux Hard Antifouling" },
+        role: { sv: "Bottenfärg", en: "Antifouling" },
+        volumeSolids: 0.49,
+        dft: { spray: 50, roller: 50 },
+        coverage: { spray: 7.0, roller: 6.0 },
+        coats: { spray: 2, roller: 2 },
+        thinner: {
+          spray: "YTA085 Thinner No.3 (spray, fackmässigt)",
+          roller: "YTA085 Thinner No.3 – normalt ej förtunnad"
+        },
+        thinnerRatio: { spray: 0.05, roller: 0.0 }
+      },
+      trilux33: {
+        key: "trilux33",
+        name: { sv: "Trilux 33", en: "Trilux 33" },
+        role: { sv: "Bottenfärg", en: "Antifouling" },
+        volumeSolids: 0.55,
+        dft: { spray: 90, roller: 60 },
+        coverage: { spray: 4.5, roller: 6.0 },
+        coats: { spray: 2, roller: 3 },
+        thinner: {
+          spray: "Förtunning Nr 3 (YTA085) – endast proffssprutning",
+          roller: "Förtunning Nr 3 – endast i undantagsfall"
+        },
+        thinnerRatio: { spray: 0.05, roller: 0.0 }
+      },
+      awl545: {
+        key: "awl545",
+        name: { sv: "545 Epoxy Primer", en: "545 Epoxy Primer" },
+        role: { sv: "Epoxiprimer / lackgrund", en: "Epoxy primer / undercoat" },
+        volumeSolids: 0.40,
+        dft: { spray: 35, roller: 35 },
+        coverage: { spray: 8.0, roller: 7.0 },
+        coats: { spray: 3, roller: 3 },
+        thinner: {
+          spray: "T0006 (spray)",
+          roller: "T0031 (pensel/rulle)"
+        },
+        thinnerRatio: { spray: 0.10, roller: 0.05 }
+      },
+      awlHDT: {
+        key: "awlHDT",
+        name: { sv: "Awlgrip HDT Topcoat", en: "Awlgrip HDT Topcoat" },
+        role: { sv: "Premium polyuretanfinish", en: "Premium polyurethane finish" },
+        volumeSolids: 0.49,
+        dft: { spray: 37, roller: 37 },
+        coverage: { spray: 9.0, roller: 8.0 },
+        coats: { spray: 2, roller: 2 },
+        thinner: {
+          spray: "OA0010/OA0015/OA0020 (aktivator/reducer)",
+          roller: "OA0010/OA0015/OA0020 (se TDS)"
+        },
+        thinnerRatio: { spray: 0.12, roller: 0.08 }
+      },
+      awlHDTclear: {
+        key: "awlHDTclear",
+        name: { sv: "Awlgrip HDT Clear", en: "Awlgrip HDT Clear" },
+        role: { sv: "Klarlack / skyddslager", en: "Clearcoat" },
+        volumeSolids: 0.49,
+        dft: { spray: 37, roller: 37 },
+        coverage: { spray: 9.0, roller: 8.0 },
+        coats: { spray: 2, roller: 2 },
+        thinner: {
+          spray: "OA0010/OA0015/OA0020 (aktivator/reducer)",
+          roller: "OA0010/OA0015/OA0020 (se TDS)"
+        },
+        thinnerRatio: { spray: 0.12, roller: 0.08 }
+      }
+    };
+
+    const i18n = {
+      sv: {
+        title: "Målningssystem – beräkning",
+        subtitle:
+          "Välj användningsprofil, område och metod. Verktyget föreslår system, skikt, liter per produkt och ungefärlig förtunning enligt datablad.",
+        section_setup: "1. Förutsättningar",
+        usage_profile_label: "Användningsprofil",
+        usage_premium: "Premium leisure (Awlgrip)",
+        usage_commercial: "Kommersiellt bruk (Interthane)",
+        usage_note:
+          "Premium = Awlgrip över vattenlinjen. Kommersiellt = Interthane 990 som standardfinish.",
+        area_position_label: "Area",
+        area_above: "Ovanför vattenlinjen",
+        area_below: "Under vattenlinjen",
+        immersion_label: "Nedsänkningsrisk",
+        immersion_non: "Ej nedsänkt (normalt fribord)",
+        immersion_near: "Nära vattenlinjen / risk att ligga under",
+        immersion_immersed: "Konstant nedsänkt",
+        immersion_note:
+          "Vid risk att ytan hamnar under vatten väljs Interfine 878 som finish (tål nedsänkning).",
+        fouling_label: "Beväxningsskydd under vattenlinjen",
+        fouling_no: "Ingen bottenfärg (Interfine 878 som slutskikt)",
+        fouling_yes: "Bottenfärg (Trilux / Trilux Hard)",
+        fouling_note:
+          "Ingen bottenfärg = Intershield 300 + Interfine 878 helt under vattenlinjen.",
+        method_label: "Appliceringsmetod",
+        method_spray: "Spruta",
+        method_roller: "Rulle/pensel",
+        method_note:
+          "Vid sprutning räknas extra spill + förtunning (typiskt 5–15 % beroende på produkt och utrustning).",
+        area_label: "Målad area (m²)",
+        area_note: "Ange total målningsbar yta för den aktuella zonen.",
+        clear_label: "Klarlack (endast premium över vattenlinjen)",
+        clear_note:
+          "Lägg till Awlgrip HDT Clear ovanpå kulörsystemet vid behov (glans/slittålighet).",
+        interthane_variant_label: "Interthane-variant",
+        interthane_990e: "Interthane 990E (standard)",
+        interthane_990hs: "Interthane 990HS (High Solid)",
+        interthane_990sg: "Interthane 990SG (semimatt)",
+        interthane_variant_note:
+          "Gäller endast över vattenlinjen vid kommersiellt bruk (ej nedsänkt fribord).",
+        btn_calc: "Beräkna system & åtgång",
+        section_result: "2. System, skikt & liter per produkt",
+        result_note:
+          "Värdena bygger på databladens rekommenderade DFT och justerad sträckförmåga (inkl. spill). Kontrollera alltid mot verkligt objekt.",
+        col_product: "Produkt",
+        col_role: "Funktion",
+        col_coats: "Skikt",
+        col_dft: "DFT/skikt (µm)",
+        col_cov: "Sträckning (m²/L)",
+        col_liters: "Liters färg",
+        col_thinner: "Förtunning",
+        trace_title: "3. Spårbarhet – målningslogg",
+        trace_note:
+          "Används efter utförd målning. Fyll i per båt/område för att dokumentera batch, faktisk åtgång, datum och utförare.",
+        trace_boat: "Båt / projekt",
+        trace_area: "Område",
+        trace_date: "Datum",
+        trace_product: "Produkt + kulör/kod",
+        trace_batch: "Batch / Lot-nr",
+        trace_planned: "Plan. liter",
+        trace_actual: "Faktisk liter",
+        trace_applicator: "Applicerare / sign",
+        trace_notes: "Kommentarer"
+      },
+      en: {
+        title: "Paint System Calculator",
+        subtitle:
+          "Select usage profile, area and method. The tool suggests system, coats, liters per product and approx. thinner consumption based on TDS.",
+        section_setup: "1. Setup",
+        usage_profile_label: "Usage profile",
+        usage_premium: "Premium leisure (Awlgrip)",
+        usage_commercial: "Commercial (Interthane)",
+        usage_note:
+          "Premium = Awlgrip above waterline. Commercial = Interthane 990 as standard finish.",
+        area_position_label: "Area",
+        area_above: "Above waterline",
+        area_below: "Below waterline",
+        immersion_label: "Immersion risk",
+        immersion_non: "Non-immersed (normal topsides)",
+        immersion_near: "Near waterline / immersion risk",
+        immersion_immersed: "Constantly immersed",
+        immersion_note:
+          "Where the surface may become immersed, Interfine 878 is used as the finish coat.",
+        fouling_label: "Fouling protection below WL",
+        fouling_no: "No antifouling (Interfine 878 as final coat)",
+        fouling_yes: "With antifouling (Trilux / Trilux Hard)",
+        fouling_note:
+          "No antifouling = Intershield 300 + Interfine 878 on the immersed area.",
+        method_label: "Application method",
+        method_spray: "Spray",
+        method_roller: "Roller/brush",
+        method_note:
+          "Spray includes extra loss and thinner (typically 5–15% depending on product and equipment).",
+        area_label: "Painted area (m²)",
+        area_note: "Enter total area to be coated in this zone.",
+        clear_label: "Clearcoat (premium above WL only)",
+        clear_note:
+          "Add Awlgrip HDT Clear over the colour system if extra gloss/durability is required.",
+        interthane_variant_label: "Interthane variant",
+        interthane_990e: "Interthane 990E (standard)",
+        interthane_990hs: "Interthane 990HS (High Solid)",
+        interthane_990sg: "Interthane 990SG (semi-gloss)",
+        interthane_variant_note:
+          "Only used above waterline in commercial profile (non-immersed topsides).",
+        btn_calc: "Calculate system & consumption",
+        section_result: "2. System, coats & liters per product",
+        result_note:
+          "Values are based on recommended DFT and adjusted coverage (incl. losses). Always verify for the real project.",
+        col_product: "Product",
+        col_role: "Role",
+        col_coats: "Coats",
+        col_dft: "DFT/coat (µm)",
+        col_cov: "Coverage (m²/L)",
+        col_liters: "Paint liters",
+        col_thinner: "Thinner",
+        trace_title: "3. Traceability – paint log",
+        trace_note:
+          "Use after painting. Fill per boat/area to document batch, actual consumption, date and applicator.",
+        trace_boat: "Boat / project",
+        trace_area: "Area",
+        trace_date: "Date",
+        trace_product: "Product + colour/code",
+        trace_batch: "Batch / Lot no.",
+        trace_planned: "Planned liters",
+        trace_actual: "Actual liters",
+        trace_applicator: "Applicator / sign",
+        trace_notes: "Notes"
+      }
+    };
+
+    let currentLang = "sv";
+
+    function applyLang(lang) {
+      currentLang = lang;
+      document.documentElement.lang = lang;
+      const dict = i18n[lang];
+      document.querySelectorAll("[data-i18n]").forEach((el) => {
+        const key = el.getAttribute("data-i18n");
+        if (dict[key]) el.textContent = dict[key];
+      });
+      document.getElementById("btn-sv").classList.toggle("active", lang === "sv");
+      document.getElementById("btn-en").classList.toggle("active", lang === "en");
+      updateVisibility();
+    }
+
+    document.getElementById("btn-sv").addEventListener("click", () => applyLang("sv"));
+    document.getElementById("btn-en").addEventListener("click", () => applyLang("en"));
+
+    function getActiveValue(containerId) {
+      const btn = document.querySelector(`#${containerId} button.active`);
+      return btn ? btn.dataset.value : null;
+    }
+    function setActive(containerId, value) {
+      document.querySelectorAll(`#${containerId} button`).forEach((b) => {
+        b.classList.toggle("active", b.dataset.value === value);
+      });
+    }
+
+    function updateVisibility() {
+      const areaPos = getActiveValue("area-position");
+      const usage = getActiveValue("usage-profile");
+      const immersionField = document.getElementById("immersion-field");
+      const foulingField = document.getElementById("fouling-field");
+      const clearField = document.getElementById("clearcoat-field");
+      const interthaneField = document.getElementById("interthane-variant-field");
+
+      if (areaPos === "below") {
+        foulingField.style.display = "block";
+        immersionField.style.opacity = 0.4;
+        immersionField.style.pointerEvents = "none";
+        document.getElementById("immersion").value = "immersed";
+      } else {
+        foulingField.style.display = "none";
+        immersionField.style.opacity = 1;
+        immersionField.style.pointerEvents = "auto";
+      }
+
+      const immersion = document.getElementById("immersion").value;
+      const isPremium = usage === "premium";
+      const canUseClear = areaPos === "above" && immersion === "non";
+      clearField.style.display = isPremium && canUseClear ? "block" : "none";
+      if (!isPremium || !canUseClear) {
+        document.getElementById("add-clear").checked = false;
+      }
+
+      const showInterthaneVariant =
+        usage === "commercial" &&
+        areaPos === "above" &&
+        immersion === "non";
+
+      interthaneField.style.display = showInterthaneVariant ? "block" : "none";
+    }
+
+    document.getElementById("usage-profile").addEventListener("click", (e) => {
+      if (e.target.tagName === "BUTTON") {
+        setActive("usage-profile", e.target.dataset.value);
+        updateVisibility();
+      }
+    });
+    document.getElementById("area-position").addEventListener("click", (e) => {
+      if (e.target.tagName === "BUTTON") {
+        setActive("area-position", e.target.dataset.value);
+        updateVisibility();
+      }
+    });
+    document.getElementById("method").addEventListener("click", (e) => {
+      if (e.target.tagName === "BUTTON") {
+        setActive("method", e.target.dataset.value);
+      }
+    });
+    document.getElementById("immersion").addEventListener("change", updateVisibility);
+
+    function chooseSystem() {
+      const usage = getActiveValue("usage-profile");
+      const areaPos = getActiveValue("area-position");
+      const immersion = document.getElementById("immersion").value;
+      const fouling = document.getElementById("fouling").value;
+      const method = getActiveValue("method");
+      const addClear = document.getElementById("add-clear").checked;
+
+      const layers = [];
+
+      if (areaPos === "below") {
+        if (fouling === "yes") {
+          layers.push({ product: "intershield300" });
+          layers.push({ product: "intergard263" });
+          layers.push({ product: "triluxHard" });
+        } else {
+          layers.push({ product: "intershield300" });
+          layers.push({ product: "interfine878" });
+        }
+      } else {
+        if (immersion === "near" || immersion === "immersed") {
+          layers.push({ product: "intershield300" });
+          layers.push({ product: "interfine878" });
+        } else {
+          if (usage === "premium") {
+            layers.push({ product: "awl545" });
+            layers.push({ product: "awlHDT" });
+            if (addClear) layers.push({ product: "awlHDTclear" });
+          } else {
+            const interthaneSelect = document.getElementById("interthane-variant");
+            const variantValue = interthaneSelect ? interthaneSelect.value : "990e";
+            let finishKey = "interthane990e";
+            if (variantValue === "990hs") finishKey = "interthane990hs";
+            if (variantValue === "990sg") finishKey = "interthane990sg";
+
+            layers.push({ product: "interprime450", variant: "alu" });
+            layers.push({ product: "interprime450", variant: "bronze" });
+            layers.push({ product: finishKey });
+          }
+        }
+      }
+
+      return { usage, areaPos, immersion, fouling, method, addClear, layers };
+    }
+
+    function formatLiters(x) {
+      return x.toFixed(2).replace(".", currentLang === "sv" ? "," : ".");
+    }
+
+    function calculateAndRender() {
+      const area = parseFloat(document.getElementById("area").value || "0");
+      if (!area || area <= 0) {
+        alert(currentLang === "sv" ? "Ange en giltig area i m²." : "Enter a valid area in m².");
+        return;
+      }
+      const { usage, areaPos, immersion, fouling, method, layers } = chooseSystem();
+      const body = document.getElementById("result-body");
+      body.innerHTML = "";
+
+      const productTotals = {};
+      const thinnerTotals = {};
+      const lossBase = method === "spray" ? 1.4 : 1.2;
+
+      layers.forEach((layer, idx) => {
+        const p = products[layer.product];
+        if (!p) return;
+        const coats = p.coats[method] ?? p.coats.spray ?? 1;
+        const dft = p.dft[method] ?? p.dft.spray ?? "";
+        const coverage = p.coverage[method] ?? p.coverage.spray ?? 8;
+
+        const liters = (area / coverage) * coats * lossBase;
+        const thinRatio = p.thinnerRatio ? (p.thinnerRatio[method] || 0) : 0;
+        const thinnerLiters = liters * thinRatio;
+
+        productTotals[p.key] = (productTotals[p.key] || 0) + liters;
+        thinnerTotals[p.key] = (thinnerTotals[p.key] || 0) + thinnerLiters;
+
+        const tr = document.createElement("tr");
+
+        const nameCell = document.createElement("td");
+        let layerName = p.name[currentLang] || p.name.sv;
+        if (layer.variant === "alu") {
+          layerName += currentLang === "sv" ? " (Alu)" : " (Alu)";
+        }
+        if (layer.variant === "bronze") {
+          layerName += currentLang === "sv" ? " (Brons)" : " (Bronze)";
+        }
+        nameCell.innerHTML = `<span class="tag">${idx + 1}</span> ` + layerName;
+        tr.appendChild(nameCell);
+
+        const roleCell = document.createElement("td");
+        roleCell.textContent = p.role[currentLang] || p.role.sv;
+        tr.appendChild(roleCell);
+
+        const coatsCell = document.createElement("td");
+        coatsCell.textContent = coats;
+        tr.appendChild(coatsCell);
+
+        const dftCell = document.createElement("td");
+        dftCell.textContent = dft ? dft : "–";
+        tr.appendChild(dftCell);
+
+        const covCell = document.createElement("td");
+        covCell.textContent = coverage.toFixed(2);
+        tr.appendChild(covCell);
+
+        const litCell = document.createElement("td");
+        litCell.textContent = formatLiters(liters);
+        tr.appendChild(litCell);
+
+        const thinCell = document.createElement("td");
+        const tText = p.thinner[method] || "";
+        const approxTxt =
+          thinRatio > 0
+            ? (currentLang === "sv"
+                ? `≈ ${Math.round(thinRatio * 100)} % av färgvolymen`
+                : `≈ ${Math.round(thinRatio * 100)} % of paint volume`)
+            : currentLang === "sv"
+              ? "Ingen eller minimal förtunning"
+              : "No or minimal thinning";
+        thinCell.innerHTML = `<div>${tText}</div><div class="small-note">${approxTxt}</div>`;
+        tr.appendChild(thinCell);
+
+        body.appendChild(tr);
+      });
+
+      const chosenDiv = document.getElementById("chosen-system");
+      const parts = [];
+      if (areaPos === "below") {
+        if (fouling === "yes") {
+          parts.push(
+            currentLang === "sv"
+              ? "Under vattenlinjen med bottenfärg: Intershield 300 + Intergard 263 + Trilux Hard."
+              : "Below waterline with antifouling: Intershield 300 + Intergard 263 + Trilux Hard."
+          );
+        } else {
+          parts.push(
+            currentLang === "sv"
+              ? "Under vattenlinjen utan bottenfärg: Intershield 300 + Interfine 878 som slutskikt."
+              : "Below waterline without antifouling: Intershield 300 + Interfine 878 as final coat."
+          );
+        }
+      } else {
+        if (immersion === "near" || immersion === "immersed") {
+          parts.push(
+            currentLang === "sv"
+              ? "Fribord med nedsänkningsrisk: Intershield 300 + Interfine 878."
+              : "Topsides with immersion risk: Intershield 300 + Interfine 878."
+          );
+        } else if (usage === "premium") {
+          parts.push(
+            currentLang === "sv"
+              ? "Premium över vattenlinjen: 545 Epoxy Primer + Awlgrip HDT (ev. HDT Clear)."
+              : "Premium above waterline: 545 Epoxy Primer + Awlgrip HDT (opt. HDT Clear)."
+          );
+        } else {
+          parts.push(
+            currentLang === "sv"
+              ? "Kommersiellt över vattenlinjen: Interprime 450 (Alu/Brons) + vald Interthane 990-variant."
+              : "Commercial above waterline: Interprime 450 (Alu/Bronze) + selected Interthane 990 variant."
+          );
+        }
+      }
+      parts.push(
+        currentLang === "sv"
+          ? `Metod: ${method === "spray" ? "Sprutning" : "Rulle/pensel"}. Area: ${area.toFixed(
+              1
+            )} m².`
+          : `Method: ${method === "spray" ? "Spray" : "Roller/brush"}. Area: ${area.toFixed(
+              1
+            )} m².`
+      );
+      chosenDiv.textContent = parts.join(" ");
+
+      const summaryDiv = document.getElementById("summary-per-product");
+      const lines = [];
+      let totalPaint = 0;
+      let totalThinner = 0;
+
+      Object.keys(productTotals).forEach((key) => {
+        const p = products[key];
+        const paintL = productTotals[key];
+        const thinL = thinnerTotals[key] || 0;
+        totalPaint += paintL;
+        totalThinner += thinL;
+
+        const orderL = paintL * 1.10;
+
+        const line =
+          `${p.name[currentLang] || p.name.sv}: ` +
+          `${formatLiters(paintL)} L` +
+          (thinL > 0
+            ? (currentLang === "sv"
+                ? ` (≈ ${formatLiters(thinL)} L förtunning)`
+                : ` (≈ ${formatLiters(thinL)} L thinner)`
+              )
+            : "") +
+          (currentLang === "sv"
+            ? ` – Rek. beställning (+10%): ${formatLiters(orderL)} L`
+            : ` – Suggested order (+10%): ${formatLiters(orderL)} L`);
+
+        lines.push(line);
+      });
+
+      const header =
+        currentLang === "sv"
+          ? "<strong>Summering per produkt:</strong>"
+          : "<strong>Summary per product:</strong>";
+      const totalLine =
+        currentLang === "sv"
+          ? `<br><br><strong>Total färg:</strong> ${formatLiters(
+              totalPaint
+            )} L &nbsp; | &nbsp; <strong>Tot. förtunning (uppskattad):</strong> ${formatLiters(
+              totalThinner
+            )} L`
+          : `<br><br><strong>Total paint:</strong> ${formatLiters(
+              totalPaint
+            )} L &nbsp; | &nbsp; <strong>Total thinner (approx.):</strong> ${formatLiters(
+              totalThinner
+            )} L`;
+
+      summaryDiv.innerHTML = header + "<br>" + lines.join("<br>") + totalLine;
+    }
+
+    document.getElementById("btn-calc").addEventListener("click", calculateAndRender);
+
+    applyLang("sv");
+    updateVisibility();
+    calculateAndRender();
+  </script>
+</body>
+</html>
